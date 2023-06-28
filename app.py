@@ -4,6 +4,8 @@ from flask import Flask,jsonify,request
 from bson.objectid import ObjectId
 from flask_cors import CORS
 import re
+from urllib.parse import unquote
+
 uri = "mongodb+srv://elliot:1234@cluster0.eeen5dm.mongodb.net/?retryWrites=true&w=majority"
 # Create a new client and connect to the server
 client = MongoClient(uri, server_api=ServerApi('1'))
@@ -73,8 +75,8 @@ def getCategory(page,category):
     return output
 
 ### genere
-@app.route("/products/<string:genere>/<string:page>", methods=["GET"])
-def getCategory(page,genere):
+@app.route("/products/genere/<string:genere>/<string:page>", methods=["GET"])
+def getGenere(page,genere):
     page=page.split("=")[1]
     page=int(page)
     output=[]
@@ -85,21 +87,31 @@ def getCategory(page,genere):
     return output
 
 ## seach
-@app.route("/products/search/<string:value>/<string:page>", methods=["GET"])
-def find(value,page):
-    page=page.split("=")[1]
+@app.route("/products/search", methods=["GET"])
+def find():
+    query = request.args.get('query')
+    page = request.args.get('page')
+    limit = request.args.get('limit')
+    limit= int(limit)
     page=int(page)
     output=[]
-    regex_pattern = re.compile(value, re.IGNORECASE)
+
+    query=unquote(query)
+    print(query)
+    query = {"$regex": query, "$options": "i"}
+  
     query = {
     '$or': [
-        {'name': {'$regex': regex_pattern}},
-        {'tags': {'$regex': regex_pattern}}
+        {'name': query},
+        {'tags': query}
     ]}
-    cursor = db.products.find(query).skip(40*page).limit(40)
+    print(query)
+    cursor = db.products.find(query).skip(limit*page).limit(limit)
     for document in cursor:
          document['_id'] = str(document['_id'])
          output.append(document)
+         
+
     return output
 
 
@@ -111,6 +123,9 @@ def discount(code):
         return {"code": value["code"], "discount": value["discount"]}
     else:
         return {"error": "Code not found"}
+    
+
+
 if __name__ == '__main__':
    app.run(debug=True ,port=4000) 
 
