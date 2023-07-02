@@ -6,6 +6,11 @@ from flask_cors import CORS
 import re
 from urllib.parse import unquote
 
+
+
+
+
+
 uri = "mongodb+srv://elliot:1234@cluster0.eeen5dm.mongodb.net/?retryWrites=true&w=majority"
 # Create a new client and connect to the server
 client = MongoClient(uri, server_api=ServerApi('1'))
@@ -24,7 +29,8 @@ def getPage(page):
 ## start server
 
 app = Flask(__name__)
-CORS(app, resources={r"/post": {"origins": "http://localhost:4200"}})
+CORS(app)
+
 @app.route("/products/<string:page>", methods=["GET"])
 def getProducts(page):
     page=page.split("=")[1]
@@ -54,7 +60,8 @@ def addProduct():
                      "imgs":request.json["imgs"],
                         "gender":request.json["gender"],
                             "sizes":request.json["sizes"],
-                                "tags":request.json["tags"]
+                                "tags":request.json["tags"],
+                                "brand":request.json["brand"]
     }
     products.insert_one(new)
     print(new)
@@ -127,6 +134,6 @@ def discount(code):
 
 
 if __name__ == '__main__':
-   app.run(debug=True ,port=4000) 
+   app.run( port=8080) 
 
 
